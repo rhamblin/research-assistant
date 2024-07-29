@@ -1,8 +1,9 @@
 import requests
+import api_keys
 from bs4 import BeautifulSoup
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-import api_keys
+from langchain.schema.output_parser import StrOutputParser
 
 template = """
 
@@ -14,13 +15,6 @@ Context: {context}
 
 """
 
-prompt = ChatPromptTemplate.from_template(template)
-
-question = 'test'
-print(template)
-# llm = ChatOpenAI(api_key=api_keys.open_ai)
-# response = llm.invoke("how can langsmith help with testing?")
-# print(response)
 
 def scrape_text(url: str):
     # Get the text of a page
@@ -37,3 +31,18 @@ def scrape_text(url: str):
             return f"Failed to retrieve the webpage: Status code {response.status_code}"
     except Exception as e:
         print(e)
+
+prompt = ChatPromptTemplate.from_template(template)
+
+url = "https://blog.langchain.dev/announcing-langsmith"
+pageContent = scrape_text(url)
+chain = prompt | ChatOpenAI(model="gpt-3.5-turbo-1106") | StrOutputParser()
+
+response = chain.invoke(
+    {
+        "question": "what is langsmith",
+        "context": pageContent
+    }
+)
+
+print(response)
